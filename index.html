@@ -101,6 +101,7 @@ const COLL = {
   mapetasks:  { get:()=>MAPE_TASKS, set:v=>{ MAPE_TASKS = v; }, key:t=>t._docId, minLevel:1, fields:null },
   // ✨ Copilot Rollout workspace - team only (Member+), free-form docs keyed by id
   cp_phases: { get:()=>CP_PHASES, set:v=>{ CP_PHASES = v; }, key:x=>x.id, minLevel:1, fields:null },
+  org:      { get:()=>ORG_UNITS, set:v=>{ ORG_UNITS = v; }, key:x=>x.id, minLevel:1, fields:null },   // template: organization structure (Org Structure tab)
   team:     { get:()=>TEAM_MEMBERS, set:v=>{ TEAM_MEMBERS = v; }, key:x=>x.id, minLevel:1, fields:null },   // template: team members (Team Lens)
   cp_tasks: { get:()=>CP_TASKS, set:v=>{ CP_TASKS = v; }, key:x=>x.id, minLevel:1, fields:null },
   cp_risks: { get:()=>CP_RISKS, set:v=>{ CP_RISKS = v; }, key:x=>x.id, minLevel:1, fields:null },
@@ -2128,6 +2129,7 @@ body.sb-rail .sidebar-divider{ margin:8px 4px !important; }
     <div class="label pm-only">PM View</div>
     <button class="tabbtn pm-only" data-tab="tasks">✅ Tasks</button>
     <button class="tabbtn pm-only" data-tab="teamlens">👥 Team Lens</button>
+    <button class="tabbtn pm-only" data-tab="org">🏢 Org Structure</button>
     <button class="tabbtn pm-only" data-tab="riskregister">📋 Risk Register</button>
     <button class="tabbtn pm-only" data-tab="risk">⚠️ Risk</button>
 
@@ -2507,6 +2509,7 @@ const TEAM_LEADS = [];   /* template: empty - names come from the tasks/epics yo
 
 /* From the Excel "Team" sheet (Name · Role · Active). Edit here when the team changes. */
 const TEAM_INFO = {};
+let ORG_UNITS = [];   /* template: organization structure records - { id, department, sub, order } (sub empty = department level only) */
 let TEAM_MEMBERS = [];   /* template: team members saved in the database - { id, name, role, active } */
 function teamRole(name){ return (TEAM_INFO[name] && TEAM_INFO[name].role) || ''; }
 function teamActive(name){ return !TEAM_INFO[name] || TEAM_INFO[name].active !== false; }
@@ -3405,6 +3408,7 @@ function syncListsFromData(){
   (typeof TEAM_MEMBERS !== 'undefined' ? TEAM_MEMBERS : []).forEach(m=>{ if(m.deleted || !m.name) return; add(TEAM_LEADS, m.name); TEAM_INFO[m.name] = { role: m.role || '', active: m.active !== false }; });
   (window.USERS_DATA || []).forEach(u=> String(u.assignee || u.names || '').split(/[,;]/).forEach(n=> add(TEAM_LEADS, n)));
   [DEPARTMENTS, TEAM_LEADS, FRAMEWORK_STAGES].forEach(a=> a.sort((x, y)=> x.localeCompare(y)));
+  if(typeof window.orgSyncDepartments === 'function') window.orgSyncDepartments();   // the Org Structure order comes first
 }
 function recomputeRollups(){ try{ syncListsFromData(); }catch(e){}
   if(window.CURRENT_USER && window.CURRENT_USER.role === 'client') return;   // client: numbers come pre-computed from clientview
@@ -3748,7 +3752,7 @@ function setLastUpdate(){
 /* =====================================================================
    TAB SWITCHING
    ===================================================================== */
-const ALL_TABS = ["timeline","mape","overview","workstreams","delta","tasks","teamlens","riskregister","risk","email","users","client","copilot"];
+const ALL_TABS = ["timeline","mape","overview","workstreams","delta","tasks","teamlens","org","riskregister","risk","email","users","client","copilot"];
 function showTab(tab){
   if(tab==='copilot' && typeof cpNavOpen==='function' && !cpNavIsOpen) cpNavOpen(true);   // opening Copilot unfolds its pages
   if(tab==='copilot' && typeof renderCopilot==='function') renderCopilot();
@@ -3853,7 +3857,7 @@ _wsDiv.innerHTML = `
   </div>`;
 mainCol.insertBefore(_wsDiv, _ovDiv.nextElementSibling);
 
-["teamlens","tasks","riskregister","users","gaps","client","copilot"].forEach(id=>{
+["teamlens","org","tasks","riskregister","users","gaps","client","copilot"].forEach(id=>{
   const div = document.createElement('div');
   div.className = 'view';
   div.id = 'view-'+id;
@@ -8987,7 +8991,7 @@ Next steps (sample): ${MOC_DATA.filter(i=>i.next).slice(0,4).map(i=>`${i.name}: 
 
 </script>
 <script>
-(function(){ var I = {"timeline": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 6h16M4 12h10M4 18h13\"/></svg>", "mape": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M20 12a8 8 0 1 1-2.3-5.7\"/><path d=\"M20 4v5h-5\"/></svg>", "overview": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 20V10M10 20V4M16 20v-7M22 20H2\"/></svg>", "workstreams": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"6\" rx=\"1.5\"/><rect x=\"3\" y=\"14\" width=\"18\" height=\"6\" rx=\"1.5\"/></svg>", "delta": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M3 17l6-6 4 4 8-8\"/><path d=\"M15 7h6v6\"/></svg>", "tasks": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M9 11l3 3 8-8\"/><path d=\"M20 12v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h9\"/></svg>", "teamlens": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"9\" cy=\"8\" r=\"3.2\"/><path d=\"M3 20c.6-3.4 3-5 6-5s5.4 1.6 6 5\"/><path d=\"M16 4.5a3 3 0 0 1 0 6M21 20c-.3-2.4-1.6-4-3.6-4.7\"/></svg>", "riskregister": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M6 3h9l4 4v14H6z\"/><path d=\"M14 3v5h5M9 13h7M9 17h5\"/></svg>", "risk": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 4l9 16H3z\"/><path d=\"M12 10v4M12 17.5v.1\"/></svg>", "copilot": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 3l1.8 4.6L18.5 9l-4.7 1.6L12 15l-1.8-4.4L5.5 9l4.7-1.4z\"/><path d=\"M18 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z\"/></svg>", "email": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"M3 7l9 6 9-6\"/></svg>", "users": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"8\" r=\"3.5\"/><path d=\"M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5\"/></svg>", "client": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg>"};
+(function(){ var I = {"org": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"9\" y=\"3\" width=\"6\" height=\"5\" rx=\"1\"/><rect x=\"2\" y=\"16\" width=\"6\" height=\"5\" rx=\"1\"/><rect x=\"16\" y=\"16\" width=\"6\" height=\"5\" rx=\"1\"/><path d=\"M12 8v4M5 16v-4h14v4\"/></svg>", "timeline": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 6h16M4 12h10M4 18h13\"/></svg>", "mape": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M20 12a8 8 0 1 1-2.3-5.7\"/><path d=\"M20 4v5h-5\"/></svg>", "overview": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M4 20V10M10 20V4M16 20v-7M22 20H2\"/></svg>", "workstreams": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"3\" y=\"4\" width=\"18\" height=\"6\" rx=\"1.5\"/><rect x=\"3\" y=\"14\" width=\"18\" height=\"6\" rx=\"1.5\"/></svg>", "delta": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M3 17l6-6 4 4 8-8\"/><path d=\"M15 7h6v6\"/></svg>", "tasks": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M9 11l3 3 8-8\"/><path d=\"M20 12v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h9\"/></svg>", "teamlens": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"9\" cy=\"8\" r=\"3.2\"/><path d=\"M3 20c.6-3.4 3-5 6-5s5.4 1.6 6 5\"/><path d=\"M16 4.5a3 3 0 0 1 0 6M21 20c-.3-2.4-1.6-4-3.6-4.7\"/></svg>", "riskregister": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M6 3h9l4 4v14H6z\"/><path d=\"M14 3v5h5M9 13h7M9 17h5\"/></svg>", "risk": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 4l9 16H3z\"/><path d=\"M12 10v4M12 17.5v.1\"/></svg>", "copilot": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M12 3l1.8 4.6L18.5 9l-4.7 1.6L12 15l-1.8-4.4L5.5 9l4.7-1.4z\"/><path d=\"M18 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z\"/></svg>", "email": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"M3 7l9 6 9-6\"/></svg>", "users": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"8\" r=\"3.5\"/><path d=\"M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5\"/></svg>", "client": "<svg class=\"mi\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg>"};
   function paint(){ document.querySelectorAll('.sidebar .tabbtn').forEach(function(b){ var ic = b.querySelector('.tb-ic'), k = b.dataset.tab;
     if(ic && I[k] && !ic.querySelector('svg')) ic.innerHTML = I[k]; }); }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', paint); else paint();
@@ -9173,6 +9177,7 @@ Next steps (sample): ${MOC_DATA.filter(i=>i.next).slice(0,4).map(i=>`${i.name}: 
     if(!el.__addNew){ el.__addNew = true; el.addEventListener('change', function(){ if(el.value !== '__new__') return;
       var v = (prompt('New ' + LBL[list] + ' name:') || '').trim(); if(!v){ el.value = ''; return; }
       var a = arr(list); if(!a.includes(v)){ a.push(v); a.sort(function(x, y){ return x.localeCompare(y); }); }
+      if(list === 'DEPARTMENTS' && window.orgQuickAdd) window.orgQuickAdd(v);   // also goes into the Org Structure
       var opt = document.createElement('option'); opt.value = v; opt.textContent = v; el.insertBefore(opt, el.querySelector('option[value="__new__"]')); el.value = v;
       el.dispatchEvent(new Event('change')); }); }
   }
@@ -9232,6 +9237,200 @@ Next steps (sample): ${MOC_DATA.filter(i=>i.next).slice(0,4).map(i=>`${i.name}: 
     });
   }catch(e){ console.warn(e); } return r; };
 })();
+</script>
+<style>
+/* template: Org Structure tab (department / sub-department records) */
+#view-org .org-bar{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 16px;}
+#view-org .org-table-wrap{padding:0;overflow:hidden;}
+#view-org table.org-table{width:100% !important;min-width:0 !important;border-collapse:collapse;}
+#view-org .org-table th{font-size:calc(11.5px * var(--fa,1) + var(--fb,0px));font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#6B7A90);text-align:left;padding:12px 18px;border-bottom:1px solid var(--border,#E3E8EF);background:rgba(127,127,127,.04);}
+#view-org .org-table td{padding:11px 18px;border-bottom:1px solid var(--border,#EEF1F5);font-size:calc(14px * var(--fa,1) + var(--fb,0px));color:var(--text,#0F2837);vertical-align:middle;}
+#view-org .org-table tr.org-first td{border-top:1px solid var(--border,#E3E8EF);}
+#view-org .org-table tbody tr:first-child td{border-top:none;}
+#view-org td.org-dep{vertical-align:top;border-right:1px solid var(--border,#EEF1F5);background:rgba(31,78,107,.035);box-shadow:inset 3px 0 0 #1F4E6B;}
+#view-org .org-dep-name{font-weight:600;font-size:calc(15px * var(--fa,1) + var(--fb,0px));}
+#view-org .org-dep-meta{font-size:calc(12px * var(--fa,1) + var(--fb,0px));color:var(--muted,#6B7A90);margin-top:3px;}
+#view-org .org-dep-act{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;}
+#view-org .org-link{border:none;background:none;padding:0;font:inherit;font-size:calc(12.5px * var(--fa,1) + var(--fb,0px));color:#1F4E6B;cursor:pointer;font-weight:600;}
+#view-org .org-link:hover{text-decoration:underline;} #view-org .org-link.danger{color:#C0392B;}
+#view-org td.org-none{color:var(--muted,#6B7A90);font-style:italic;}
+#view-org td.org-n{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted,#6B7A90);}
+#view-org td.org-act{text-align:right;white-space:nowrap;} #view-org td.org-act .btn{margin-left:4px;}
+#view-org .org-empty{text-align:center;padding:48px 20px;background:var(--surface,#fff);border:1px dashed var(--border,#D4DEEA);border-radius:16px;color:var(--text,#0F2837);}
+#view-org .org-empty-ic{font-size:40px;margin-bottom:8px;} #view-org .org-empty p{color:var(--muted,#6B7A90);max-width:520px;margin:8px auto 16px;}
+.org-form .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;} .org-form input[type=text]{width:100%;box-sizing:border-box;} .org-form input[readonly]{opacity:.7;}
+@media (max-width:700px){ .org-form .form-grid{grid-template-columns:1fr;} #view-org .org-table th:nth-child(3), #view-org td.org-n{display:none;} }
+[data-theme="dark"] #view-org td.org-dep{background:rgba(111,168,214,.06);box-shadow:inset 3px 0 0 #6FA8D6;}
+[data-theme="dark"] #view-org .org-link{color:#8CC0EA;} [data-theme="dark"] #view-org .org-link.danger{color:#F08A7E;}
+</style>
+<script>
+/* template: Org Structure tab - a simple list of records (collection "org").
+   Each record is a Department only, or a Department + Sub-department.
+   The Department drop-downs in Tasks and Epics list them automatically (sub-departments indented under their department). */
+(function(){
+  function esc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
+  function nk(v){ return String(v || '').trim().replace(/\s+/g, ' ').toLowerCase(); }
+  function clean(v){ return String(v || '').trim().replace(/\s+/g, ' '); }
+  function recs(){ return ORG_UNITS.filter(function(r){ return !r.deleted && r.department; }); }
+  function newId(){ return 'org-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6); }
+  function canEdit(){ return typeof myLevel === 'function' && myLevel() >= 3; }
+  function save(msg){ setLastUpdate(); renderAllViews(); if(msg) showInfoToast(msg); }
+
+  /* departments in the order they were added, each with its sub-departments */
+  function tree(){
+    var out = [], idx = {};
+    recs().slice().sort(function(a, b){ return (a.order || 0) - (b.order || 0); }).forEach(function(r){
+      var k = nk(r.department); if(!(k in idx)){ idx[k] = out.length; out.push({ name: clean(r.department), subs: [], recs: [] }); }
+      var d = out[idx[k]]; d.recs.push(r); if(r.sub && !d.subs.some(function(s){ return nk(s.name) === nk(r.sub); })) d.subs.push({ name: clean(r.sub), rec: r }); });
+    return out;
+  }
+  window.orgTree = tree;
+  function allNames(){ var n = []; tree().forEach(function(d){ n.push(d.name); d.subs.forEach(function(s){ n.push(s.name); }); }); return n; }
+  function nextOrder(){ return recs().reduce(function(m, r){ return Math.max(m, r.order || 0); }, 0) + 1; }
+  function taskCount(names){ var set = {}; names.forEach(function(n){ set[nk(n)] = 1; });
+    return (TASKS_DATA || []).filter(function(t){ return !t.deleted && set[nk(t.department)]; }).length; }
+
+  /* Department drop-downs: the structure first, then any other names already used in the data */
+  window.orgSyncDepartments = function(){
+    var names = allNames(); if(!names.length) return;
+    var extra = DEPARTMENTS.filter(function(d){ return !names.some(function(n){ return nk(n) === nk(d); }); });
+    DEPARTMENTS.splice(0, DEPARTMENTS.length); names.concat(extra).forEach(function(d){ if(DEPARTMENTS.indexOf(d) < 0) DEPARTMENTS.push(d); });
+  };
+  function indent(id){
+    var el = document.querySelector(id); if(!el) return; var sub = {};
+    tree().forEach(function(d){ d.subs.forEach(function(s){ sub[nk(s.name)] = 1; }); });
+    Array.prototype.forEach.call(el.options, function(o){ if(sub[nk(o.value)]) o.textContent = '  └ ' + o.value; });
+  }
+  ['fillSelect', 'fillSelectChoose'].forEach(function(fn){ var o = window[fn]; if(typeof o !== 'function') return;
+    window[fn] = function(id){ var r = o.apply(this, arguments); try{ if(/department/i.test(String(id))) indent(id); }catch(e){} return r; }; });
+  /* "+ Add new department…" in the task / epic form also adds a record here */
+  window.orgQuickAdd = function(name){ name = clean(name); if(!name || allNames().some(function(n){ return nk(n) === nk(name); })) return;
+    ORG_UNITS.push({ id:newId(), department:name, sub:'', order:nextOrder(), deleted:false }); setLastUpdate(); };
+
+  /* ---------- page ---------- */
+  window.renderOrg = function(){
+    var v = document.getElementById('view-org'); if(!v) return;
+    var t = tree(), ed = canEdit(), nSub = t.reduce(function(a, d){ return a + d.subs.length; }, 0);
+    var h = '<button class="zone-shot-btn" onclick="captureZone(this.nextElementSibling)">📷 Copy as Image</button><div class="shot-target">'
+      + '<h2 class="view-title">Organization Structure</h2>'
+      + '<p class="view-sub">' + (t.length ? t.length + ' department' + (t.length === 1 ? '' : 's') + ' · ' + nSub + ' sub-department' + (nSub === 1 ? '' : 's') + '. ' : '')
+      + 'The Department lists in Tasks and Epics come from here.</p>';
+    if(ed) h += '<div class="org-bar no-shot"><button class="btn primary" onclick="orgEdit()">＋ Add record</button><button class="btn secondary" onclick="orgPaste()">📋 Paste a list</button></div>';
+    if(!t.length){
+      h += '<div class="org-empty"><div class="org-empty-ic">🏢</div><b>No records yet</b><p>Add a department, or a department with a sub-department. Tasks and Epics will then offer them in the Department field.</p>'
+        + (ed ? '<button class="btn primary" onclick="orgEdit()">＋ Add the first record</button>' : '') + '</div>';
+    } else {
+      h += '<div class="card org-table-wrap"><table class="org-table"><thead><tr><th style="width:34%">Department</th><th>Sub-department</th><th style="width:110px;text-align:right;">Tasks</th>' + (ed ? '<th class="no-shot" style="width:96px;"></th>' : '') + '</tr></thead><tbody>';
+      t.forEach(function(d){
+        var dn = esc(d.name).replace(/'/g, '&#39;'), n = taskCount([d.name]);
+        var rows = d.subs.length ? d.subs : [null];
+        rows.forEach(function(s, i){
+          h += '<tr class="' + (i === 0 ? 'org-first' : '') + '">';
+          if(i === 0) h += '<td rowspan="' + rows.length + '" class="org-dep"><div class="org-dep-name">' + esc(d.name) + '</div>'
+            + (d.subs.length ? '<div class="org-dep-meta">' + d.subs.length + ' sub-department' + (d.subs.length === 1 ? '' : 's') + (n ? ' · ' + n + ' task' + (n === 1 ? '' : 's') + ' at department level' : '') + '</div>' : '')
+            + (ed ? '<div class="org-dep-act no-shot"><button type="button" class="org-link" onclick="orgEdit(null, \'' + esc(d.recs[0].id) + '\')">＋ Sub-department</button><button type="button" class="org-link" onclick="orgRenameDept(\'' + esc(d.recs[0].id) + '\')">Rename</button><button type="button" class="org-link danger" onclick="orgDeleteDept(\'' + esc(d.recs[0].id) + '\')">Remove</button></div>' : '') + '</td>';
+          if(s){ var c = taskCount([s.name]);
+            h += '<td class="org-sub">└ ' + esc(s.name) + '</td><td class="org-n">' + c + '</td>'
+              + (ed ? '<td class="org-act no-shot"><button type="button" class="btn secondary cp-mini" onclick="orgEdit(\'' + esc(s.rec.id) + '\')" title="Edit">✏️</button><button type="button" class="btn secondary cp-mini" onclick="orgDelete(\'' + esc(s.rec.id) + '\')" title="Remove">🗑</button></td>' : '');
+          } else {
+            h += '<td class="org-sub org-none">Department level only</td><td class="org-n">' + n + '</td>' + (ed ? '<td class="org-act no-shot"></td>' : '');
+          }
+          h += '</tr>';
+        });
+      });
+      h += '</tbody></table></div>';
+    }
+    v.innerHTML = h + '</div>';
+  };
+
+  /* ---------- add / edit one record ---------- */
+  window.orgEdit = function(id, deptOfId){
+    if(!canEdit()){ showInfoToast('Only editors can change the structure.'); return; }
+    var r = id ? ORG_UNITS.find(function(x){ return x.id === id; }) : null, base = deptOfId ? ORG_UNITS.find(function(x){ return x.id === deptOfId; }) : null;
+    var dep = r ? r.department : base ? base.department : '';
+    var list = tree().map(function(d){ return '<option value="' + esc(d.name) + '">'; }).join('');
+    openDetailModal(popupHeaderHTML(r ? 'Edit record' : 'Add record', 'A department on its own, or a department with one sub-department.')
+      + '<div class="popup-body org-form"><div class="form-grid">'
+      + '<div class="form-field"><label>Department *</label><input id="og_dep" type="text" list="og_deps" value="' + esc(dep) + '" placeholder="e.g. Finance"' + (r ? ' readonly title="Use Rename on the department to change its name"' : '') + '><datalist id="og_deps">' + list + '</datalist></div>'
+      + '<div class="form-field"><label>Sub-department <span style="text-transform:none;font-weight:400;">(optional)</span></label><input id="og_sub" type="text" value="' + esc(r ? r.sub : '') + '" placeholder="Leave empty for department level only"></div>'
+      + '</div><div class="modal-actions" style="margin-top:16px;"><button class="btn secondary" onclick="closeDetailModal()">Cancel</button><button class="btn primary" onclick="orgSave(\'' + (id || '') + '\')">' + (r ? 'Save' : 'Add') + '</button></div></div>');
+    setTimeout(function(){ var n = document.getElementById(dep ? 'og_sub' : 'og_dep'); if(n) n.focus(); }, 50);
+  };
+  window.orgSave = async function(id){
+    var dep = clean(document.getElementById('og_dep').value), sub = clean(document.getElementById('og_sub').value);
+    if(!dep){ showInfoToast('⛔ Enter the department.'); return; }
+    if(nk(dep) === nk(sub)){ showInfoToast('⛔ The sub-department needs a different name from its department.'); return; }
+    var t = tree(), d = t.find(function(x){ return nk(x.name) === nk(dep); }); if(d) dep = d.name;
+    var r = id ? ORG_UNITS.find(function(x){ return x.id === id; }) : null;
+    if(sub){
+      var clash = t.find(function(x){ return nk(x.name) === nk(sub); }) ? 'a department' : (t.some(function(x){ return x.subs.some(function(s){ return nk(s.name) === nk(sub) && (!r || s.rec.id !== r.id); }); }) ? 'a sub-department' : '');
+      if(clash){ showInfoToast('⛔ "' + sub + '" already exists as ' + clash + ' - names must be unique so each task points to one place.'); return; }
+    } else if(!r && d){ showInfoToast('ℹ️ "' + dep + '" already exists. Add a sub-department name to add one under it.'); return; }
+    else if(!r && t.some(function(x){ return x.subs.some(function(s){ return nk(s.name) === nk(dep); }); })){ showInfoToast('⛔ "' + dep + '" already exists as a sub-department.'); return; }
+    var old = r ? r.sub : null;
+    if(r){ r.sub = sub; }
+    else {
+      var only = d && d.recs.find(function(x){ return !x.sub; });   // department had no sub-departments yet: fill that record
+      if(only) only.sub = sub; else ORG_UNITS.push({ id:newId(), department:dep, sub:sub, order: d ? d.recs[d.recs.length - 1].order || 0 : nextOrder(), deleted:false });
+    }
+    closeDetailModal();
+    if(old && sub && old !== sub) await renameInData(old, sub);
+    save('✓ ' + (r ? 'Saved' : 'Added') + ' - ' + dep + (sub ? ' › ' + sub : ''));
+  };
+  async function renameInData(from, to){
+    var tN = (TASKS_DATA || []).filter(function(t){ return !t.deleted && t.department === from; }), eN = (MOC_DATA || []).filter(function(e){ return !e.deleted && e.department === from; });
+    if(!(tN.length || eN.length)) return;
+    if(await askConfirm({ title:'Rename it in the tasks too?', html:'<b>' + tN.length + ' task' + (tN.length === 1 ? '' : 's') + '</b> and <b>' + eN.length + ' epic' + (eN.length === 1 ? '' : 's') + '</b> use "' + esc(from) + '". Change them to "' + esc(to) + '"?', yes:'Yes, rename', no:'Keep the old name' })){
+      tN.forEach(function(t){ t.department = to; }); eN.forEach(function(e){ e.department = to; }); var i = DEPARTMENTS.indexOf(from); if(i > -1) DEPARTMENTS.splice(i, 1);
+    }
+  }
+  window.orgRenameDept = async function(anyId){
+    var r = ORG_UNITS.find(function(x){ return x.id === anyId; }); if(!r) return; var from = r.department;
+    var to = clean(prompt('New name for the department "' + from + '":', from) || ''); if(!to || to === from) return;
+    if(allNames().some(function(n){ return nk(n) === nk(to) && nk(n) !== nk(from); })){ showInfoToast('⛔ "' + to + '" already exists.'); return; }
+    recs().forEach(function(x){ if(nk(x.department) === nk(from)) x.department = to; });
+    await renameInData(from, to); save('✓ Renamed - ' + to);
+  };
+  window.orgDelete = async function(id){
+    var r = ORG_UNITS.find(function(x){ return x.id === id; }); if(!r) return;
+    var n = taskCount([r.sub]);
+    if(!(await askConfirm({ title:'Remove "' + r.sub + '"?', html: n ? n + ' task(s) use it. They keep the name.' : 'No task uses it.', yes:'Remove', danger:true }))) return;
+    var nm = r.sub; var others = recs().filter(function(x){ return x.id !== id && nk(x.department) === nk(r.department); });
+    if(others.length) r.deleted = true; else r.sub = '';   // last sub-department: the department stays, at department level
+    save('✓ Removed - ' + nm);
+  };
+  window.orgDeleteDept = async function(anyId){
+    var r = ORG_UNITS.find(function(x){ return x.id === anyId; }); if(!r) return; var dep = r.department;
+    var mine = recs().filter(function(x){ return nk(x.department) === nk(dep); }), n = taskCount([dep].concat(mine.map(function(x){ return x.sub; }).filter(Boolean)));
+    if(!(await askConfirm({ title:'Remove "' + dep + '"' + (mine.some(function(x){ return x.sub; }) ? ' and its sub-departments' : '') + '?', html: n ? n + ' task(s) use them. They keep the name.' : 'No task uses it.', yes:'Remove', danger:true }))) return;
+    mine.forEach(function(x){ x.deleted = true; }); save('✓ Removed - ' + dep);
+  };
+
+  /* ---------- paste a list: one record per line - "Department" or "Department | Sub-department" ---------- */
+  window.orgPaste = function(){
+    if(!canEdit()) return;
+    openDetailModal(popupHeaderHTML('Paste a list', 'One record per line: <b>Department</b> or <b>Department | Sub-department</b>. You can paste two columns straight from Excel.')
+      + '<div class="popup-body"><textarea id="og_paste" rows="12" style="width:100%;box-sizing:border-box;font-family:ui-monospace,Menlo,monospace;font-size:13px;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);" placeholder="Finance | Accounts Payable\nFinance | Procurement\nHuman Resources\nTechnology | Engineering\nTechnology | Data &amp; AI"></textarea>'
+      + '<div style="font-size:12px;color:var(--muted);margin-top:6px;">Records that already exist are skipped.</div>'
+      + '<div class="modal-actions" style="margin-top:14px;"><button class="btn secondary" onclick="closeDetailModal()">Cancel</button><button class="btn primary" onclick="orgPasteSave()">Add</button></div></div>');
+  };
+  window.orgPasteSave = function(){
+    var added = 0, skipped = 0;
+    document.getElementById('og_paste').value.split(/\r?\n/).forEach(function(l){
+      var p = l.split(/\t|\|/).map(clean).filter(function(x, i){ return i < 2; }), dep = p[0], sub = p[1] || ''; if(!dep) return;
+      var t = tree(), d = t.find(function(x){ return nk(x.name) === nk(dep); }); if(d) dep = d.name;
+      var exists = sub ? t.some(function(x){ return nk(x.name) === nk(sub) || x.subs.some(function(s){ return nk(s.name) === nk(sub); }); }) : !!d || t.some(function(x){ return x.subs.some(function(s){ return nk(s.name) === nk(dep); }); });
+      if(exists || nk(dep) === nk(sub)){ skipped++; return; }
+      var only = d && sub && d.recs.find(function(x){ return !x.sub; });
+      if(only) only.sub = sub; else ORG_UNITS.push({ id:newId(), department:dep, sub:sub, order:nextOrder(), deleted:false }); added++; });
+    closeDetailModal(); save('✓ Added ' + added + ' record' + (added === 1 ? '' : 's') + (skipped ? ' · ' + skipped + ' already there' : ''));
+  };
+
+  var oRA = window.renderAllViews; if(typeof oRA === 'function') window.renderAllViews = function(){ var r = oRA.apply(this, arguments); try{ renderOrg(); }catch(e){ console.warn(e); } return r; };
+  var oST = window.showTab; if(typeof oST === 'function'){ window.showTab = function(t){ var r = oST.apply(this, arguments); if(t === 'org') try{ renderOrg(); }catch(e){ console.warn(e); } return r; }; Object.keys(oST).forEach(function(k){ window.showTab[k] = oST[k]; }); }
+  setTimeout(function(){ try{ renderOrg(); }catch(e){} }, 300);
+})();
+
 </script>
 </body>
 </html>
