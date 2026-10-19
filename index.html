@@ -35,7 +35,7 @@ import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWith
    Firebase Console → ⚙️ Project settings → General → Your apps → Web app → Config
    ===================================================================== */
 const firebaseConfig = {
-  /* IIH Leadership Firebase project (iih-leadership) - NOT the MoC project iih-trackers-db */
+  /* IIH Leadership Firebase project (iih-leadership) - not the MoC project */
   apiKey: "AIzaSyCOONRMM41-UfsvMCvw3ffPp0kKfW7hPRg",
   authDomain: "iih-leadership.firebaseapp.com",
   projectId: "iih-leadership",
@@ -101,6 +101,7 @@ const COLL = {
   mapetasks:  { get:()=>MAPE_TASKS, set:v=>{ MAPE_TASKS = v; }, key:t=>t._docId, minLevel:1, fields:null },
   // ✨ Copilot Rollout workspace - team only (Member+), free-form docs keyed by id
   cp_phases: { get:()=>CP_PHASES, set:v=>{ CP_PHASES = v; }, key:x=>x.id, minLevel:1, fields:null },
+  team:     { get:()=>TEAM_MEMBERS, set:v=>{ TEAM_MEMBERS = v; }, key:x=>x.id, minLevel:1, fields:null },   // template: team members (Team Lens)
   cp_tasks: { get:()=>CP_TASKS, set:v=>{ CP_TASKS = v; }, key:x=>x.id, minLevel:1, fields:null },
   cp_risks: { get:()=>CP_RISKS, set:v=>{ CP_RISKS = v; }, key:x=>x.id, minLevel:1, fields:null },
   cp_raci: { get:()=>CP_RACI, set:v=>{ CP_RACI = v; }, key:x=>x.id, minLevel:1, fields:null },
@@ -2506,6 +2507,7 @@ const TEAM_LEADS = [];   /* template: empty - names come from the tasks/epics yo
 
 /* From the Excel "Team" sheet (Name · Role · Active). Edit here when the team changes. */
 const TEAM_INFO = {};
+let TEAM_MEMBERS = [];   /* template: team members saved in the database - { id, name, role, active } */
 function teamRole(name){ return (TEAM_INFO[name] && TEAM_INFO[name].role) || ''; }
 function teamActive(name){ return !TEAM_INFO[name] || TEAM_INFO[name].active !== false; }
 
@@ -3400,6 +3402,7 @@ function syncListsFromData(){
   (typeof TASKS_DATA !== 'undefined' ? TASKS_DATA : []).forEach(t=>{ if(t.deleted) return; add(DEPARTMENTS, t.department); add(TEAM_LEADS, t.assignee); add(FRAMEWORK_STAGES, t.stage); });
   (typeof MOC_DATA !== 'undefined' ? MOC_DATA : []).forEach(e=>{ if(e.deleted) return; add(DEPARTMENTS, e.department); add(TEAM_LEADS, e.lead); add(FRAMEWORK_STAGES, e.stage);
     if(e.pillar && !PILLARS.some(p=>p.code === e.pillar)) PILLARS.push({ code:e.pillar, name:e.pillar }); });
+  (typeof TEAM_MEMBERS !== 'undefined' ? TEAM_MEMBERS : []).forEach(m=>{ if(m.deleted || !m.name) return; add(TEAM_LEADS, m.name); TEAM_INFO[m.name] = { role: m.role || '', active: m.active !== false }; });
   (window.USERS_DATA || []).forEach(u=> String(u.assignee || u.names || '').split(/[,;]/).forEach(n=> add(TEAM_LEADS, n)));
   [DEPARTMENTS, TEAM_LEADS, FRAMEWORK_STAGES].forEach(a=> a.sort((x, y)=> x.localeCompare(y)));
 }
@@ -7609,7 +7612,7 @@ function renderClientView(){
       </div>
     </div></section>`; })()}
 
-    <section class="cv-sec report-zone"><button class="zone-shot-btn" onclick="captureSlide(this.nextElementSibling)" title="Copy this section as an image for a slide">📷 Copy as Image</button><div class="cv-slide">
+    <section class="cv-sec report-zone" style="display:none" data-iih-hidden="copilot"><button class="zone-shot-btn" onclick="captureSlide(this.nextElementSibling)" title="Copy this section as an image for a slide">📷 Copy as Image</button><div class="cv-slide">
       <h2 class="view-title">Microsoft Copilot Rollout ${CP.fromWorkspace ? (!isClient() ? `<button class="btn secondary no-shot" style="padding:3px 10px;font-size:calc(11.5px * var(--fa,1) + var(--fb,0px));vertical-align:middle;" onclick="showTab('copilot')" title="These numbers come from the ✨ Copilot Rollout tab">✨ Open Copilot tab</button>` : '') : editBtn('editClientCopilot()','Target date, phases and their dates')}</h2>
       <p class="view-sub">Target: ${fmtDate(new Date(CP.target || cfgCopilot().target))} · overall ${CP.pct||0}% (${CP.done||0} of ${CP.tasks||0} ${CP.fromWorkspace ? 'activities' : 'tasks'} done)</p>
       <div class="card">
@@ -8144,12 +8147,11 @@ window.downloadClientPptx = async function(mode){
       { i:0, title:'Workstreams Progress To-Date', parts:null },
       { i:1, title:'Portfolio at a Glance', parts:null },
       { i:2, title:'The Journey So Far', parts:['phases','opp'] },
-      { i:2, title:'Delivered to Date', parts:['deliv'], sub:'AI Strategy engagement · key deliverables and where each one stands' },
+      { i:2, title:'Delivered to Date', parts:['deliv'], sub:DASH.engagement + ' · key deliverables and where each one stands' },
       { i:5, title:'Epics by Milestone', parts:['md2'], sub:'How many epics each milestone has, and how far each one is' },
       { i:5, title:'Overall Progress by Week', parts:['md3'], sub:'Overall progress at each weekly close', need:'md3' },
       { i:5, title:'This Week', parts:['md1'], sub:'What is coming up, what needs attention, and what moved since the last weekly close' },
-      { i:3, title:'Blockers & Required Actions', parts:null },
-      { i:4, title:'Microsoft Copilot Rollout', parts:null } ];
+      { i:3, title:'Blockers & Required Actions', parts:null } ];   // template: no Copilot slide
     busyOverlay(true, '📊 Building the PowerPoint…');
     try{
       for(const sp of specs){
@@ -8254,7 +8256,7 @@ window.downloadClientPptx = async function(mode){
   blockersSlide();
 
   // ---- 7. Microsoft Copilot Rollout (last content slide) ----
-  { const CP = P.copilot || { phases:[] }; const unit = CP.fromWorkspace ? 'activities' : 'tasks';
+  if(false){ const CP = P.copilot || { phases:[] }; const unit = CP.fromWorkspace ? 'activities' : 'tasks';   // template: no Copilot slide
     const sl = content('Microsoft Copilot Rollout', `Target: ${new Date(CP.target || cfgCopilot().target).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})} · overall ${CP.pct||0}% (${CP.done||0} of ${CP.tasks||0} ${unit} done)`);
     cap(sl, `${CP.phases.length}-phase delivery roadmap`, 0.5, 1.5, 8);
     const h = Math.min(0.92, (5.25 - (CP.phases.length-1)*0.14)/Math.max(CP.phases.length,1));
@@ -9121,6 +9123,44 @@ Next steps (sample): ${MOC_DATA.filter(i=>i.next).slice(0,4).map(i=>`${i.name}: 
   }
   ['fillSelect', 'fillSelectChoose'].forEach(function(fn){ var o = window[fn]; if(typeof o !== 'function') return;
     window[fn] = function(id){ var r = o.apply(this, arguments); try{ extend(id); }catch(e){} return r; }; });
+})();
+</script>
+<script>
+/* template: "Team members" button on Team Lens - add, edit, deactivate or remove people (saved for the whole team) */
+(function(){
+  function esc(v){ return String(v == null ? '' : v).replace(/[&<>"]/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]; }); }
+  function row(m){ return '<tr data-id="' + esc(m.id || '') + '"><td><input type="text" class="tm-name tm-in" value="' + esc(m.name) + '" placeholder="Full name"></td>'
+    + '<td><input type="text" class="tm-role tm-in" value="' + esc(m.role) + '" placeholder="Role, e.g. Senior Consultant"></td>'
+    + '<td style="text-align:center;"><input type="checkbox" class="tm-active" ' + (m.active === false ? '' : 'checked') + '></td>'
+    + '<td style="text-align:center;"><button type="button" class="btn secondary cp-mini" onclick="this.closest(\'tr\').remove()" title="Remove">✕</button></td></tr>'; }
+  window.openTeamMembers = function(){
+    if(myLevel() < 3){ showInfoToast('Only editors can change the team.'); return; }
+    var list = TEAM_MEMBERS.filter(function(m){ return !m.deleted; });
+    openDetailModal(popupHeaderHTML('Team members', 'Everyone shown in Team Lens and offered as an assignee. Untick Active to hide someone without losing their history.')
+      + '<div class="popup-body"><style>#tmTable{width:100% !important;min-width:0 !important;table-layout:fixed;border-collapse:collapse;} #tmTable th{font-size:12px;font-weight:500;color:var(--muted);text-align:left;padding:6px;border-bottom:1px solid var(--border);} #tmTable .tm-in{width:100%;box-sizing:border-box;padding:7px 9px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font:inherit;} #tmTable td{padding:6px 6px;}</style><table class="tm-table" id="tmTable"><colgroup><col style="width:42%"><col><col style="width:64px"><col style="width:48px"></colgroup><tr><th>Name</th><th>Role</th><th style="text-align:center;">Active</th><th></th></tr>'
+      + (list.length ? list.map(row).join('') : row({ name:'', role:'', active:true })) + '</table>'
+      + '<button type="button" class="btn secondary" style="margin-top:10px;" onclick="document.getElementById(\'tmTable\').insertAdjacentHTML(\'beforeend\', window._tmRow({ name:\'\', role:\'\', active:true }))">＋ Add person</button>'
+      + '<div class="modal-actions" style="margin-top:16px;"><button class="btn secondary" onclick="closeDetailModal()">Cancel</button><button class="btn primary" onclick="saveTeamMembers()">Save</button></div></div>');
+  };
+  window._tmRow = row;
+  window.saveTeamMembers = function(){
+    var rows = Array.prototype.slice.call(document.querySelectorAll('#tmTable tr[data-id]')), seen = {}, keep = {}, n = 0;
+    var bad = rows.map(function(r){ return r.querySelector('.tm-name').value.trim(); }).filter(function(x, i, a){ return x && a.indexOf(x) !== i; });
+    if(bad.length){ showInfoToast('⛔ "' + bad[0] + '" is listed twice.'); return; }
+    rows.forEach(function(r, i){ var name = r.querySelector('.tm-name').value.trim(); if(!name) return;
+      var id = r.dataset.id || ('tm-' + Date.now().toString(36) + '-' + i), m = TEAM_MEMBERS.find(function(x){ return x.id === id; });
+      if(!m){ m = { id:id }; TEAM_MEMBERS.push(m); }
+      m.name = name; m.role = r.querySelector('.tm-role').value.trim(); m.active = r.querySelector('.tm-active').checked; m.deleted = false; keep[id] = 1; n++; });
+    TEAM_MEMBERS.forEach(function(m){ if(!keep[m.id] && !m.deleted){ m.deleted = true; var i = TEAM_LEADS.indexOf(m.name); if(i > -1 && !TASKS_DATA.some(function(t){ return t.assignee === m.name; })) TEAM_LEADS.splice(i, 1); delete TEAM_INFO[m.name]; } });
+    closeDetailModal(); setLastUpdate(); renderAllViews(); showInfoToast('✓ Team saved - ' + n + ' ' + (n === 1 ? 'person' : 'people'));
+  };
+  var o = window.renderTeamLens; if(typeof o !== 'function') return;
+  window.renderTeamLens = function(){ var r = o.apply(this, arguments); try{
+    var t = document.querySelector('#view-teamlens .view-title'); if(t && myLevel() >= 3 && !t.querySelector('.tm-btn'))
+      t.insertAdjacentHTML('beforeend', ' <button type="button" class="btn secondary tm-btn no-shot" style="vertical-align:middle;font-size:13px;padding:5px 12px;" onclick="openTeamMembers()">👥 Team members</button>');
+    if(!TEAM_MEMBERS.some(function(m){ return !m.deleted; })){ var v = document.getElementById('view-teamlens'); if(v && !v.querySelector('.tm-empty')) { var st = v.querySelector('.view-sub');
+      if(st) st.insertAdjacentHTML('afterend', '<div class="od-banner tm-empty no-shot" style="background:#EEF3F8;border-color:#D4DEEA;color:#0F2837;"><span>No team members yet. Add the people in your team so they appear here and in the Assignee lists.</span>' + (myLevel() >= 3 ? '<button type="button" class="btn primary" onclick="openTeamMembers()">👥 Add team members</button>' : '') + '</div>'); } }
+  }catch(e){ console.warn(e); } return r; };
 })();
 </script>
 </body>
