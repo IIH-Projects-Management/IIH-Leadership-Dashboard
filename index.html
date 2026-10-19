@@ -9432,5 +9432,26 @@ Next steps (sample): ${MOC_DATA.filter(i=>i.next).slice(0,4).map(i=>`${i.name}: 
 })();
 
 </script>
+<style>
+@keyframes mocNudge{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.modal-overlay .moc-nudge{animation:mocNudge .35s ease;}
+</style>
+<script>
+/* template: windows with fields to fill stay open when you click outside them, so typed information is never lost.
+   Read-only pop-ups (no fields) still close on an outside click. */
+(function(){
+  function hasFields(ov){ return !!Array.prototype.some.call(ov.querySelectorAll('input, textarea, select, [contenteditable="true"]'), function(el){
+    return el.type !== 'hidden' && el.offsetParent !== null; }); }
+  var downOnOverlay = false;
+  document.addEventListener('mousedown', function(e){ downOnOverlay = !!(e.target.classList && e.target.classList.contains('modal-overlay')); }, true);
+  document.addEventListener('click', function(e){
+    var ov = e.target; if(!ov.classList || !ov.classList.contains('modal-overlay') || !ov.classList.contains('open')) return;
+    if(downOnOverlay && !hasFields(ov)) return;            // read-only pop-up, clicked outside on purpose: let it close
+    e.stopImmediatePropagation(); e.preventDefault();      // keep the window open
+    var box = ov.firstElementChild; if(box){ box.classList.remove('moc-nudge'); void box.offsetWidth; box.classList.add('moc-nudge'); }
+    if(downOnOverlay && typeof showInfoToast === 'function') showInfoToast('Use Save or Cancel to close this window - nothing you typed is lost.');
+  }, true);
+})();
+</script>
 </body>
 </html>
