@@ -1,0 +1,56 @@
+rules_version = '2';
+// IIH LEADERSHIP DASHBOARD - Firestore rules (per-user login, roles admin / editor / viewer).
+// Publish these in the NEW "IIH Leadership" Firebase project (not the MoC project iih-trackers-db).
+// Only people on the Users list (collection "users", doc id = lower-case email) with a VERIFIED email can read.
+// mabukhamseh@iih.ai is always admin (bootstrap), even before the Users list exists.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn()  { return request.auth != null && request.auth.token.email != null
+                                  && request.auth.token.email_verified == true; }
+    function me()        { return request.auth.token.email.lower(); }
+    function isOwner()   { return signedIn() && me() == 'mabukhamseh@iih.ai'; }
+    function profPath()  { return /databases/$(database)/documents/users/$(me()); }
+    function hasProf()   { return signedIn() && exists(profPath()) && get(profPath()).data.active != false; }
+    function role()      { return isOwner() ? 'admin' : (hasProf() ? get(profPath()).data.role : 'none'); }
+    function isTeam()    { return role() in ['viewer', 'editor', 'admin', 'manager', 'member']; }
+    function isEditor()  { return role() in ['editor', 'admin', 'manager']; }
+    function isAdmin()   { return role() == 'admin'; }
+    function dataColl(c) { return c in ['tasks', 'epics', 'milestones', 'risks', 'mapetasks', 'snapshots'] || c.matches('cp_.*'); }
+
+    // project data: everyone on the team reads, editors and admins write
+    match /{coll}/{id} {
+      allow read:  if dataColl(coll) && isTeam();
+      allow write: if dataColl(coll) && isEditor();
+    }
+
+    // Users & Access: a person can read their own entry; only admins see / change the list
+    match /users/{email} {
+      allow read:  if isAdmin() || (signedIn() && me() == email);
+      allow write: if isAdmin();
+    }
+
+    // Client View page + report settings: team reads, admin changes
+    match /settings/{id} {
+      allow read:  if isTeam();
+      allow write: if isAdmin();
+    }
+
+    // change history: append-only, stamped with the writer's own email
+    match /audit/{id} {
+      allow read:   if isEditor();
+      allow create: if isEditor() && request.resource.data.by == me();
+      allow update, delete: if false;
+    }
+
+    // who is online: one small doc per open page
+    match /presence/{id} {
+      allow read: if isTeam();
+      allow create, update: if isTeam() && request.resource.data.by == me();
+      allow delete: if isTeam() && (resource.data.by == me()
+                                    || resource.data.at < request.time - duration.value(6, 'h'));
+    }
+
+    // everything else is closed
+  }
+}
