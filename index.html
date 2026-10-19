@@ -7357,8 +7357,59 @@ const LINE_ICONS = {
   sparkles: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 3v4M17 5h4M5 17v4M3 19h4"/>',
   inbox:    '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5h13L22 12v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6z"/>',
   users:    '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-4-6"/>',
-  pin:      '<circle cx="12" cy="10" r="3"/><path d="M12 21s7-6.2 7-11a7 7 0 0 0-14 0c0 4.8 7 11 7 11z"/>'
+  pin:      '<circle cx="12" cy="10" r="3"/><path d="M12 21s7-6.2 7-11a7 7 0 0 0-14 0c0 4.8 7 11 7 11z"/>',
+  "coins": "<ellipse cx=\"9\" cy=\"7\" rx=\"6\" ry=\"3\"/><path d=\"M3 7v4c0 1.7 2.7 3 6 3s6-1.3 6-3V7\"/><path d=\"M3 11v4c0 1.7 2.7 3 6 3 1.2 0 2.3-.2 3.2-.5\"/><circle cx=\"17\" cy=\"16\" r=\"4\"/>",
+  "wallet": "<path d=\"M3 7a2 2 0 0 1 2-2h12v4\"/><path d=\"M3 7v10a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2z\"/><circle cx=\"16\" cy=\"14\" r=\"1.2\"/>",
+  "briefcase": "<rect x=\"3\" y=\"7\" width=\"18\" height=\"13\" rx=\"2\"/><path d=\"M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18\"/>",
+  "handshake": "<path d=\"M2 12l4-4 4 2 3-2 3 1 6 3\"/><path d=\"M6 8l-4 4 6 6 2-1 2 2 2-1 2 1 5-5\"/><path d=\"M10 15l2 2M12 13l2.5 2.5\"/>",
+  "shield": "<path d=\"M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z\"/><path d=\"M9 12l2 2 4-4\"/>",
+  "lock": "<rect x=\"4\" y=\"10\" width=\"16\" height=\"11\" rx=\"2\"/><path d=\"M8 10V7a4 4 0 0 1 8 0v3M12 15v2\"/>",
+  "database": "<ellipse cx=\"12\" cy=\"5\" rx=\"8\" ry=\"3\"/><path d=\"M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5\"/><path d=\"M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3\"/>",
+  "server": "<rect x=\"3\" y=\"3\" width=\"18\" height=\"7\" rx=\"2\"/><rect x=\"3\" y=\"14\" width=\"18\" height=\"7\" rx=\"2\"/><path d=\"M7 6.5h.01M7 17.5h.01M11 6.5h6M11 17.5h6\"/>",
+  "cloud": "<path d=\"M7 19h10a5 5 0 0 0 .7-9.95A7 7 0 0 0 4.3 11 4 4 0 0 0 7 19z\"/>",
+  "chip": "<rect x=\"6\" y=\"6\" width=\"12\" height=\"12\" rx=\"2\"/><rect x=\"9.5\" y=\"9.5\" width=\"5\" height=\"5\"/><path d=\"M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4\"/>",
+  "brain": "<path d=\"M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 3 3h0a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3z\"/><path d=\"M15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-3 3 3 3 0 0 1-3-3\"/>",
+  "code": "<path d=\"M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16\"/>",
+  "monitor": "<rect x=\"2\" y=\"4\" width=\"20\" height=\"13\" rx=\"2\"/><path d=\"M8 21h8M12 17v4\"/>",
+  "phone": "<rect x=\"7\" y=\"2\" width=\"10\" height=\"20\" rx=\"2\"/><path d=\"M11 18h2\"/>",
+  "globe": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18\"/>",
+  "calendar": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M3 10h18M8 3v4M16 3v4\"/>",
+  "clock": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/>",
+  "meeting": "<path d=\"M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z\"/><path d=\"M8 11h.01M12 11h.01M16 11h.01\"/>",
+  "mail": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"M3 7l9 6 9-6\"/>",
+  "megaphone": "<path d=\"M3 11v2a1 1 0 0 0 1 1h3l8 5V5L7 10H4a1 1 0 0 0-1 1z\"/><path d=\"M19 8a5 5 0 0 1 0 8M7 14l1.5 6h2.5l-1-5.5\"/>",
+  "target": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"12\" r=\"5\"/><circle cx=\"12\" cy=\"12\" r=\"1.5\"/>",
+  "flag": "<path d=\"M5 21V4M5 4h11l-2 4 2 4H5\"/>",
+  "trophy": "<path d=\"M8 4h8v5a4 4 0 0 1-8 0z\"/><path d=\"M8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4M12 13v4M8 21h8M9 17h6v4H9z\"/>",
+  "book": "<path d=\"M4 4h6a3 3 0 0 1 3 3v14a2 2 0 0 0-2-2H4z\"/><path d=\"M20 4h-6a3 3 0 0 0-1 .2M20 4v15h-7\"/>",
+  "graduation": "<path d=\"M2 9l10-5 10 5-10 5z\"/><path d=\"M6 11v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5M22 9v6\"/>",
+  "document": "<path d=\"M6 3h9l4 4v14H6z\"/><path d=\"M14 3v5h5M9 13h7M9 17h5\"/>",
+  "clipboard": "<rect x=\"5\" y=\"4\" width=\"14\" height=\"17\" rx=\"2\"/><path d=\"M9 4V3h6v1M9 11l2 2 4-4M9 17h6\"/>",
+  "checklist": "<path d=\"M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17M11 6h9M11 12h9M11 18h9\"/>",
+  "scale": "<path d=\"M12 3v18M7 21h10M5 7h14M5 7l-3 6a3 3 0 0 0 6 0zM19 7l-3 6a3 3 0 0 0 6 0z\"/>",
+  "building": "<rect x=\"4\" y=\"3\" width=\"16\" height=\"18\" rx=\"1\"/><path d=\"M9 21v-4h6v4M8 7h2M14 7h2M8 11h2M14 11h2\"/>",
+  "home": "<path d=\"M3 11l9-7 9 7\"/><path d=\"M5 10v10h14V10M10 20v-6h4v6\"/>",
+  "truck": "<path d=\"M3 6h11v10H3zM14 9h4l3 3v4h-7\"/><circle cx=\"7\" cy=\"17.5\" r=\"1.8\"/><circle cx=\"17\" cy=\"17.5\" r=\"1.8\"/>",
+  "cart": "<circle cx=\"9\" cy=\"20\" r=\"1.4\"/><circle cx=\"18\" cy=\"20\" r=\"1.4\"/><path d=\"M2 3h3l2.5 12h11l2-8H6.2\"/>",
+  "heart": "<path d=\"M12 20s-7-4.4-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.6-9 9-9 9z\"/>",
+  "gear": "<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1\"/>",
+  "wrench": "<path d=\"M14.7 6.3a4 4 0 0 0 5 5L12 19l-3 1 1-3 7.7-7.7z\"/><path d=\"M14.7 6.3L9 12M4 20l3-3\"/>",
+  "lightbulb": "<path d=\"M9 18h6M10 21h4\"/><path d=\"M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.8V16h5v-.3c0-.7.4-1.4 1-1.8A6 6 0 0 0 12 3z\"/>",
+  "layers": "<path d=\"M12 3l9 5-9 5-9-5z\"/><path d=\"M3 13l9 5 9-5\"/>",
+  "network": "<circle cx=\"12\" cy=\"5\" r=\"2.5\"/><circle cx=\"5\" cy=\"19\" r=\"2.5\"/><circle cx=\"19\" cy=\"19\" r=\"2.5\"/><path d=\"M12 7.5v4M12 11.5L6.5 17M12 11.5l5.5 5.5\"/>",
+  "trend": "<path d=\"M3 17l6-6 4 4 8-8\"/><path d=\"M15 7h6v6\"/>",
+  "pie": "<path d=\"M12 3v9h9\"/><path d=\"M21 12a9 9 0 1 1-9-9\"/>",
+  "star": "<path d=\"M12 3l2.8 5.8 6.2.9-4.5 4.4 1.1 6.2L12 17.4 6.4 20.3l1.1-6.2L3 9.7l6.2-.9z\"/>",
+  "leaf": "<path d=\"M5 19c9 0 14-6 14-15C10 4 5 9 5 19z\"/><path d=\"M5 19l8-8\"/>",
+  "palette": "<path d=\"M12 3a9 9 0 0 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-1.2-1-1.6-1-2.7 0-1 .8-1.7 1.8-1.7H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8z\"/><circle cx=\"7.5\" cy=\"11\" r=\"1\"/><circle cx=\"10\" cy=\"7\" r=\"1\"/><circle cx=\"15\" cy=\"7.5\" r=\"1\"/>",
+  "link": "<path d=\"M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1\"/><path d=\"M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1\"/>",
+  "folder": "<path d=\"M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"/>"
 };
+/* auto icon: first keyword rule that matches the workstream name (English + Arabic); no match = pin */
+const ICON_RULES = [["shield", "secur|cyber|risk|compliance|audit|protect|أمن|مخاطر|امتثال"], ["scale", "legal|law|contract|regulat|governance|policy|قانون|حوكمة|سياس"], ["coins", "financ|budget|cost|revenue|invest|fund|account|pricing|مالي|ميزان|إيراد"], ["wallet", "payment|billing|invoice|procure|purchas|مشتري|فواتير"], ["handshake", "partner|client|customer|stakeholder|relation|sales|vendor|\\bdeal|شراك|عميل|عملاء|مبيعات"], ["brain", "\\bai\\b|artificial|machine learning|\\bml\\b|intellig|genai|llm|copilot|ذكاء"], ["database", "\\bdata\\b|database|analytics|\\bbi\\b|dashboard|report|بيانات|تقارير"], ["cloud", "cloud|azure|aws|gcp|سحاب"], ["server", "infra|server|network|devops|platform|hosting|datacent|بنية|خوادم"], ["code", "develop|software|\\bapp\\b|application|engineer|integrat|\\bapi\\b|migration|برمج|تطوير|تطبيق"], ["monitor", "digital|website|portal|\\bit\\b|technology|tech|systems?|رقمي|تقني|بوابة"], ["users", "\\bhr\\b|human|people|talent|team|staff|recruit|hiring|employee|موارد بشرية|موظف|فريق|توظيف"], ["graduation", "train|learn|academy|education|capabilit|skill|upskill|تدريب|تعليم|تعلم"], ["meeting", "meeting|leadership|committee|board|steering|workshop|اجتماع|قيادة|لجنة|ورش"], ["calendar", "event|schedul|calendar|plan(ning)?\\b|roadmap|timeline|خطة|فعالي|جدول"], ["megaphone", "market|brand|communicat|\\bpr\\b|media|campaign|social|تسويق|اتصال|إعلام"], ["compass", "strateg|vision|mission|direction|استراتيج|رؤية"], ["target", "goal|okr|\\bkpi|objective|performance|اهداف|أهداف|أداء"], ["search", "research|discover|assess|analy[sz]|study|review|بحث|تقييم|تحليل|دراس"], ["lightbulb", "innovat|\\bidea\\b|r&d|\\blab\\b|ابتكار|فكر"], ["rocket", "launch|delivery|deploy|go.?live|rollout|release|execut|إطلاق|تنفيذ"], ["gear", "operat|process|automat|maintenan|support|service|عمليات|تشغيل|دعم|خدمات"], ["truck", "logistic|supply|shipping|transport|warehouse|لوجست|شحن|نقل|مستودع"], ["cart", "e-?commerce|\\bstore|\\bshop|retail|متجر|تجزئة"], ["building", "facilit|real estate|office|property|construct|مبنى|عقار|إنشاء"], ["home", "housing|municipal|residential|إسكان|بلدي"], ["heart", "health|wellbeing|wellness|\\bcare\\b|medical|صحة|رعاية"], ["palette", "cultur|\\bart\\b|design|creative|heritage|museum|ثقاف|فن|تراث|تصميم"], ["leaf", "sustainab|environment|green|esg|بيئ|استدام"], ["globe", "international|global|external|expansion|دولي|عالمي"], ["document", "document|brd|content|knowledge|writing|وثائق|محتوى"], ["checklist", "quality|\\bqa\\b|test|checklist|جودة|اختبار"], ["inbox", "ad.?hoc|request|ticket|backlog|طلبات"], ["trend", "growth|progress|improv|transform|optimi|نمو|تحسين|تحول"], ["trophy", "excellen|award|achievement|تميز|جائزة"], ["layers", "portfolio|program|pmo|project|محفظة|برنامج|مشروع"], ["sparkles", "special|initiative|pilot|مبادر"]].map(x=>[x[0], new RegExp(x[1], 'i')]);
+function autoIcon(name){ const n = String(name||''); for(const [k, re] of ICON_RULES) if(re.test(n)) return k; return 'pin'; }
+/* saved icon 'auto' (or none / the old default 'pin') = follow the name */
+function isAutoIcon(v){ return !v || v === 'auto' || v === 'pin'; }
 function lineIcon(name, size){ return `<svg width="${size||22}" height="${size||22}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LINE_ICONS[name] || LINE_ICONS.pin}</svg>`; }
 /* 9 business departments (the rest are internal teams and are not counted) */
 const BUSINESS_DEPTS = [];
@@ -7370,7 +7421,10 @@ const DELIVERABLES = [];
 const OPPORTUNITY_FACTS = [];
 /* ---- client page settings: what was saved with ✏️ Edit (Firebase settings/clientPage), else the defaults above ---- */
 function cps(k){ return window.CLIENT_SETTINGS && window.CLIENT_SETTINGS[k] != null ? window.CLIENT_SETTINGS[k] : null; }
-function cfgWsMeta(){ return { ...WS_META, ...(cps('wsMeta') || {}) }; }
+function cfgWsMeta(){ const m = { ...WS_META, ...(cps('wsMeta') || {}) };
+  (typeof MILESTONES_DATA !== 'undefined' ? MILESTONES_DATA : []).forEach(w=>{ if(!w || w.deleted || !w.name) return; const k = normKey(w.name), e = m[k] || {};
+    if(isAutoIcon(e.icon)) m[k] = { ...e, short: e.short || w.name, icon: autoIcon(w.name) }; });
+  return m; }
 function cfgBusiness(){ return cps('business') || BUSINESS_DEPTS; }
 function cfgJourney(){ const saved = cps('journey'); return JOURNEY.map((j,i)=> ({ ...j, ...(saved && saved[i] ? saved[i] : {}) })); }
 function cfgDeliverables(){ return cps('deliverables') || DELIVERABLES; }
@@ -7702,7 +7756,7 @@ function openListEditor(o){
   const cell = (c, v) => {
     const val = v == null ? '' : v;
     if(c.type === 'check') return `<input type="checkbox" data-k="${c.key}" ${val ? 'checked' : ''}>`;
-    if(c.type === 'select' || c.type === 'icon') return `<select data-k="${c.key}">${(c.type==='icon' ? Object.keys(LINE_ICONS) : c.options).map(op=>{ const v2 = typeof op === 'object' ? op.v : op, l = typeof op === 'object' ? op.l : op; return `<option value="${escapeHtml(v2)}" ${String(v2)===String(val)?'selected':''}>${escapeHtml(l)}</option>`; }).join('')}</select>`;
+    if(c.type === 'select' || c.type === 'icon') return `<select data-k="${c.key}">${(c.type==='icon' ? ['auto', ...Object.keys(LINE_ICONS)] : c.options).map(op=>{ const v2 = typeof op === 'object' ? op.v : op, l = typeof op === 'object' ? op.l : op; return `<option value="${escapeHtml(v2)}" ${String(v2)===String(val)?'selected':''}>${escapeHtml(l)}</option>`; }).join('')}</select>`;
     if(c.type === 'fixed') return `<b data-k="${c.key}" data-v="${escapeHtml(val)}">${escapeHtml(val)}</b>`;
     return `<input type="${c.type==='date'?'date':'text'}" data-k="${c.key}" value="${escapeHtml(val)}">`;
   };
@@ -7736,9 +7790,10 @@ window.editClientWs = function(){
     top:`<div class="missing-banner" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
       <span><b>Milestone</b> = the real name (the epics follow it, used in every tab). To rename it everywhere use Manage Milestones.<br><b>Name on the card</b> = only what the client reads. <b>Show to client</b> off = hidden from the client page only (it stays in all your tabs).</span>
       <button class="btn secondary" style="white-space:nowrap;" onclick="closeDetailModal();openMilestonesModal()">✏️ Manage Milestones</button></div>`,
-    cols:[ {key:'show', label:'Show to client', type:'check', width:'110px'}, {key:'name', label:'Milestone', type:'fixed', width:'28%'}, {key:'short', label:'Name on the card'}, {key:'icon', label:'Icon', type:'icon', width:'130px'} ],
-    rows: MILESTONES_DATA.map(m=>({ show: !(meta[normKey(m.name)]||{}).hidden, name:m.name, short:(meta[normKey(m.name)]||{}).short || m.name, icon:(meta[normKey(m.name)]||{}).icon || 'pin' })),
-    note:'Icons: ' + Object.keys(LINE_ICONS).map(k=>`${lineIcon(k,16)} ${k}`).join(' &nbsp; '),
+    cols:[ {key:'show', label:'Show to client', type:'check', width:'110px'}, {key:'name', label:'Milestone', type:'fixed', width:'28%'}, {key:'short', label:'Name on the card'}, {key:'icon', label:'Icon', type:'icon', width:'210px'} ],
+    rows: MILESTONES_DATA.map(m=>({ show: !(meta[normKey(m.name)]||{}).hidden, name:m.name, short:(meta[normKey(m.name)]||{}).short || m.name, icon: isAutoIcon(((cps('wsMeta')||{})[normKey(m.name)]||{}).icon) ? 'auto' : cps('wsMeta')[normKey(m.name)].icon })),
+    note:'<b>auto</b> = the icon follows the milestone name (now: ' + MILESTONES_DATA.filter(m=>!m.deleted).map(m=>`${lineIcon(autoIcon(m.name),15)} ${escapeHtml(m.name)}`).join(', ') + '). Pick an icon to fix it by hand.'
+      + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:4px 10px;margin-top:8px;">' + Object.keys(LINE_ICONS).map(k=>`<span style="display:flex;align-items:center;gap:6px;white-space:nowrap;">${lineIcon(k,16)} ${k}</span>`).join('') + '</div>',
     validate: rows => rows.some(r=>r.show) ? '' : 'Show at least one milestone to the client.',
     onSave: rows => saveCP('wsMeta', Object.fromEntries(rows.map(r=>[normKey(r.name), { short: r.short || r.name, icon: r.icon, ...(r.show ? {} : { hidden:true }) }])), 'Workstreams Progress To-Date cards') });
 };
@@ -9160,6 +9215,21 @@ Next steps (sample): ${MOC_DATA.filter(i=>i.next).slice(0,4).map(i=>`${i.name}: 
       t.insertAdjacentHTML('beforeend', ' <button type="button" class="btn secondary tm-btn no-shot" style="vertical-align:middle;font-size:13px;padding:5px 12px;" onclick="openTeamMembers()">👥 Team members</button>');
     if(!TEAM_MEMBERS.some(function(m){ return !m.deleted; })){ var v = document.getElementById('view-teamlens'); if(v && !v.querySelector('.tm-empty')) { var st = v.querySelector('.view-sub');
       if(st) st.insertAdjacentHTML('afterend', '<div class="od-banner tm-empty no-shot" style="background:#EEF3F8;border-color:#D4DEEA;color:#0F2837;"><span>No team members yet. Add the people in your team so they appear here and in the Assignee lists.</span>' + (myLevel() >= 3 ? '<button type="button" class="btn primary" onclick="openTeamMembers()">👥 Add team members</button>' : '') + '</div>'); } }
+  }catch(e){ console.warn(e); } return r; };
+})();
+</script>
+
+<script>
+(function(){
+  var o = window.editClientWs; if(typeof o !== 'function') return;
+  window.editClientWs = function(){ var r = o.apply(this, arguments); try{
+    document.querySelectorAll('.modal-overlay.open select[data-k="icon"]').forEach(function(sel){
+      var tr = sel.closest('tr'), cells = tr ? tr.querySelectorAll('td') : [], name = cells[1] ? cells[1].textContent.trim() : '';
+      var a = sel.querySelector('option[value="auto"]'); if(a) a.textContent = 'auto (match name)';
+      var box = document.createElement('span'); box.className = 'ic-prev'; box.style.cssText = 'display:inline-flex;width:30px;height:30px;border-radius:50%;align-items:center;justify-content:center;background:#EEF3F8;color:#5B1F3C;flex:none;';
+      var wrap = document.createElement('div'); wrap.style.cssText = 'display:flex;align-items:center;gap:8px;'; sel.parentNode.insertBefore(wrap, sel); wrap.appendChild(box); wrap.appendChild(sel);
+      var paint = function(){ box.innerHTML = lineIcon(sel.value === 'auto' ? autoIcon(name) : sel.value, 17); }; sel.addEventListener('change', paint); paint();
+    });
   }catch(e){ console.warn(e); } return r; };
 })();
 </script>
