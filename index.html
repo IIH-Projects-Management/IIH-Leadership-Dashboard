@@ -2316,8 +2316,8 @@ body.sb-rail .sidebar-divider{ margin:8px 4px !important; }
         <input type="date" id="f_due">
       </div>
       <div class="form-field">
-        <label>% Progress <span class="hint">(auto: Completed = 100%, otherwise 0%)</span></label>
-        <input type="number" id="f_pct" min="0" max="100" value="0" readonly style="background:var(--bg);cursor:not-allowed;">
+        <label>% Progress <span class="hint">(enter 0-100 · setting Completed fills 100%)</span></label>
+        <input type="number" id="f_pct" min="0" max="100" step="1" value="0">
       </div>
       <div class="form-field">
         <label>Tags (comma separated)</label>
@@ -2671,8 +2671,8 @@ let TASKS_DATA = [];   // v8: loaded live from Firestore after sign-in
 /* =====================================================================
    ROLL-UP ENGINE (v7) - Tasks → Epics → Milestones. Single place where
    every progress % is computed; nothing below is hardcoded.
-   • Task %      : Completed = 100, anything else (Not Started / In Progress /
-                   On Hold / Blocked) = 0.
+   • Task %      : entered manually on the task (0-100). Tasks saved before
+                   manual entry (no stored %) fall back to Completed = 100, else 0.
    • Epic %      : average of its tasks' %. An epic with NO tasks = 0%.
    • Milestone % : average of its STARTED epics' % (an epic with no tasks yet is not counted; exact values, rounded for display).
    Matching is by name, case/space-insensitive (MOC_DATA.initiative ↔
@@ -2680,6 +2680,9 @@ let TASKS_DATA = [];   // v8: loaded live from Firestore after sign-in
    ===================================================================== */
 const TASK_DONE_STATUS = 'Completed';
 function taskPctFromStatus(status){ return status===TASK_DONE_STATUS ? 100 : 0; }
+/* Manual task % (Nov 2026): the stored value wins; clamp to 0-100; fall back to the status rule only when nothing is stored. */
+function clampPct(v){ const n = Number(v); return Number.isFinite(n) ? Math.max(0, Math.min(100, Math.round(n))) : null; }
+function taskPct(t){ const n = (t && t.pct !== '' && t.pct != null) ? clampPct(t.pct) : null; return n === null ? taskPctFromStatus(t && t.status) : n; }
 function normKey(v){ return String(v||'').trim().replace(/\s+/g,' ').toLowerCase(); }
 function tasksOfEpic(epic){ const k=normKey(epic.name); return TASKS_DATA.filter(t=>normKey(t.workstream)===k); }
 function epicsOfMilestone(ms){ const k=normKey(ms.name||ms); return MOC_DATA.filter(e=>normKey(e.initiative)===k); }
@@ -3412,7 +3415,7 @@ function syncListsFromData(){
 }
 function recomputeRollups(){ try{ syncListsFromData(); }catch(e){}
   if(window.CURRENT_USER && window.CURRENT_USER.role === 'client') return;   // client: numbers come pre-computed from clientview
-  TASKS_DATA.forEach(t=>{ t.pct = taskPctFromStatus(t.status); t.milestone = taskMilestone(t); });   // milestone: shown / sorted / filtered, never stored
+  TASKS_DATA.forEach(t=>{ t.pct = taskPct(t); t.milestone = taskMilestone(t); });   // milestone: shown / sorted / filtered, never stored
   const today = daysFromToday(0);
   MOC_DATA.forEach(ep=>{
     const ts = tasksOfEpic(ep);
@@ -6053,6 +6056,7 @@ function renderTasks(){
           const task = TASKS_DATA.find(t=>t.id===taskId);
           if(task && task.status !== newStatus){
             task.status = newStatus;
+            if(newStatus === TASK_DONE_STATUS) task.pct = 100;
             renderTaskContent();
             renderTeamLens();
                       }
@@ -6423,7 +6427,7 @@ function openTaskModal(taskToEdit){
   if(_curEpic && !_epicNames.includes(_curEpic)) _epicNames.push(_curEpic);
   $('#f_workstream').innerHTML = '<option value="">Choose epic...</option>' +
     _epicNames.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
-  $('#f_status').onchange = ()=>{ $('#f_pct').value = taskPctFromStatus($('#f_status').value); };
+  $('#f_status').onchange = ()=>{ if($('#f_status').value === TASK_DONE_STATUS) $('#f_pct').value = 100; };
   // B) Title fills itself from Department - Purpose until someone types their own title
   const autoTitle = ()=>{ const d = $('#f_department').value, p = purposeVal(); return d && p ? d + ' - ' + p : (d || p); };
   let titleTouched = false;
@@ -6483,7 +6487,7 @@ function openTaskModal(taskToEdit){
     $('#f_due').value = fmtDateInput(taskToEdit.due);
     $('#f_start').value = fmtDateInput(taskToEdit.start);
     $('#f_link').value = taskToEdit.link || '';
-    $('#f_pct').value = taskPctFromStatus(taskToEdit.status);
+    $('#f_pct').value = taskPct(taskToEdit);
     $('#f_tags').value = (Array.isArray(taskToEdit.tags)?taskToEdit.tags:String(taskToEdit.tags||'').split(',')).join(', ');
     $('#f_notes').value = taskToEdit.notes || '';
   } else {
@@ -6548,7 +6552,7 @@ $('#saveTaskBtn').onclick = ()=>{
     priority: $('#f_priority').value,
     stage: $('#f_stage').value,
     tags: $('#f_tags').value.split(',').map(t=>t.trim()).filter(Boolean),
-    pct: taskPctFromStatus($('#f_status').value),
+    pct: (()=>{ const v = clampPct($('#f_pct').value); return v === null ? taskPctFromStatus($('#f_status').value) : v; })(),
     due,
     notes: $('#f_notes').value.trim()
   };
